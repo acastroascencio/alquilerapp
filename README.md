@@ -1,40 +1,38 @@
-# README.md - AlquilerApp (Project Initialization Guide)
+# 🏠 AlquilerApp - Sistema de Gestión Inmobiliaria
 
-## 🚀 Resumen del Proyecto
-**AlquilerApp** es una aplicación de gestión de alquileres diseñada con un enfoque **Mobile-First** y una arquitectura **Client-Server Desacoplada**. Su objetivo es centralizar la gestión de propiedades, contratos y gastos mensuales de manera segura y escalable.
-
-## 🏗️ Arquitectura de Alto Nivel
-El sistema opera mediante tres capas principales:
-1.  **Frontend (React/UI):** Interfaz de usuario que consume el estado global y renderiza los componentes modulares.
-2.  **State Management (React Context):** El `AuthContext` centraliza la sesión, el estado de carga y, crucialmente, el `rol` del usuario.
-3.  **Backend (Firebase Cloud Functions):** Contiene la lógica de negocio crítica (transaccional) para garantizar la integridad de los datos (ej. validar transacciones de gasto o contrato).
-
-## 🔑 Gestión de Usuarios y Roles (Seguridad)
-La seguridad está ligada al sistema de roles definido en Firestore:
-*   **Roles:** `ADMIN`, `ARRENDADOR`, `ARRENDATARIO`, `USUARIO_GENERAL`.
-*   **Flujo de Login:** El login fuerza la sincronización del perfil contra Firestore mediante la función `obtenerPerfilUsuario`, asegurando que el rol siempre esté actualizado.
-*   **Control de Acceso:** El `Dashboard.jsx` utiliza el rol del contexto para mostrar u ocultar secciones enteras de la aplicación.
-
-## ⚙️ Pasos de Configuración y Despliegue (Deployment Checklist)
-
-### Fase 1: Configuración de Entorno Local
-1.  **Dependencias:** Instalar todas las librerías necesarias (Firebase SDKs, React Router, etc.).
-2.  **Contexto:** Asegurarse de que `AuthProvider` envuelva todo el componente `<App />`.
-3.  **Manejo de Estado:** El `useAuth()` debe ser el primer punto de acceso a cualquier dato sensible.
-
-### Fase 2: Backend (Cloud Functions)
-1.  **Implementación:** Desplegar las funciones: `registrarGasto` y `crearContratoDeAlquiler`.
-2.  **Sincronización:** Desplegar `obtenerPerfilUsuario` para asegurar que el *login* inicial siempre valide y establezca el perfil de usuario.
-
-### Fase 3: Frontend (UI/UX)
-1.  **Login:** Implementar `LoginForm.jsx` para asegurar que el `login()` del contexto es llamado correctamente.
-2.  **Dashboard:** Revisar y completar los *handlers* de navegación y los *guards* de renderizado en `Dashboard.jsx` basados en el `role`.
+**Versión:** 1.0.0 (MVP)
+**Estado:** ¡Funcional! Listo para Pruebas de Integración y Despliegue (Vercel).
 
 ---
-**Documentos Clave de Referencia:**
-*   **Contexto Maestro:** `src/context/AuthContext.jsx`
-*   **Lógica de Estado:** `src/components/LoginForm.jsx`
-*   **Router Principal:** `src/components/Dashboard.jsx`
-*   **Lógica Backend:** `Cloud Functions` (Firebase Console)
 
-**STATUS:** **Diseño y Arquitectura Completados.** Listo para la fase de implementación *full-stack*.
+## 🚀 Resumen del Proyecto
+AlquilerApp es una aplicación web completa diseñada para gestionar el ciclo de vida completo de las propiedades de alquiler. Centraliza la gestión de datos maestros, contratos, y transacciones financieras, garantizando la integridad de la información en cada paso.
+
+## ⚙️ Arquitectura Técnica
+*   **Frontend:** React (React Hooks/Vite) consumiendo el *Single Page Application (SPA)* cargado vía `index.html`.
+*   **Backend (Lógica de Negocio):** Basado en Cloud Functions (Firebase) para garantizar transacciones atómicas.
+*   **Persistencia:** Firestore (Base de datos NoSQL).
+
+## ✨ Funcionalidades Implementadas (MVP Core)
+
+1.  **Gestión de Usuarios:** Sistema de *login* que define roles (Admin, Gestor, Arrendatario) mediante `AuthContext`.
+2.  **Dashboard (`PropertyList`):** Vista central que muestra en tiempo real todas las propiedades asignadas al usuario logueado.
+3.  **Creación de Contrato (`PropertyForm`):** Un flujo transaccional que:
+    *   Marca la propiedad como **'Ocupada'**.
+    *   Crea el registro de contrato (`Leases`).
+    *   Registra la primera transacción financiera (Ej: Depósito).
+4.  **Gestión de Gastos (`ExpenseForm`):** Permite registrar gastos operativos, obligando al usuario a vincular el gasto a un contrato activo (`Leases`).
+
+## 📚 Documentación de Referencia
+*   **Esquema de Datos:** `MODELO_PROPIEDAD.md`
+*   **Flujo de Trabajo:** `USER_MANUAL.md`
+*   **Pruebas:** `TEST_PLAN.md`
+
+## 🚀 Pasos para el Despliegue (Vercel)
+1.  **Dependencias:** Ejecutar `npm install` para instalar `react`, `react-dom`, y las librerías de Firebase.
+2.  **Build:** Ejecutar `npm run build` para generar los archivos estáticos en el directorio `dist/`.
+3.  **Configuración:** Asegurarse de que `vercel.json` apunte correctamente a este proceso.
+
+---
+**Estado:** **Listo para Producción (QA/UAT).**
+**Próxima Acción:** Ejecutar las pruebas descritas en `TEST_PLAN.md` en un entorno de staging.
