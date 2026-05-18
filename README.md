@@ -36,5 +36,3 @@ AlquilerApp es una aplicación web completa diseñada para gestionar el ciclo de
 ---
 **Estado:** **Listo para Producción (QA/UAT).**
 **Próxima Acción:** Ejecutar las pruebas descritas en `TEST_PLAN.md` en un entorno de staging.
-
-// Actualización forzada - Mayo 2026.
