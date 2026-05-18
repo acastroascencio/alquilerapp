@@ -1,33 +1,44 @@
 import React from 'react';
-// Importar aquí el contexto de autenticación y las rutas principales
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import PropertyList from './components/PropertyList';
 import LoginForm from './components/LoginForm';
 import { useAuth } from './context/AuthContext';
 
-function App() {
-    const { currentUser } = useAuth();
+// Componente que maneja la lógica de enrutamiento y protege las rutas.
+const ProtectedRoute = ({ children }) => {
+    const { user, loading } = useAuth();
 
+    if (loading) {
+        return <div className="min-h-screen flex items-center justify-center text-xl">Cargando sesión...</div>;
+    }
+
+    if (!user) {
+        // Redirigir a /login si no hay usuario y no estamos en la ruta de login
+        return <Routes><Route path="*" element={<LoginForm />} /></Routes>;
+    }
+
+    return children;
+};
+
+function App() {
     return (
         <div className="min-h-screen bg-gray-50">
-            {/* Barra de Navegación Global (Aquí iría el Sidebar/Header) */}
-            <header className="p-4 bg-white shadow sticky top-0 z-10">
-                <h1 className="text-xl font-bold text-indigo-700">AlquilerApp</h1>
+            {/* Barra de Navegación Global */}
+            <header className="sticky top-0 z-10 bg-white shadow p-4">
+                <div className="max-w-7xl mx-auto flex justify-between items-center">
+                    <h1 className="text-2xl font-extrabold text-indigo-700">AlquilerApp</h1>
+                </div>
             </header>
 
-            <main className="container mx-auto p-4">
-                {/* Aquí se usaría un componente RouterProvider que maneja la lógica de qué vista mostrar */}
-                {currentUser ? (
-                    <Routes>
-                        <Route path="/" element={<PropertyList />} />
-                        <Route path="/login" element={<LoginForm />} />
-                        {/* Rutas futuras: /propiedades/:id/contract, /gastos */}
-                    </Routes>
-                ) : (
-                    <div className="text-center p-10">
-                        <LoginForm />
-                    </div>
-                )}
+            <main className="max-w-7xl mx-auto p-4 pt-8">
+                <Routes>
+                    <Route path="/" element={<PropertyList />} />
+                    <Route path="/login" element={<LoginForm />} />
+                    {/* Las rutas protegidas se envolverán con ProtectedRoute */}
+                    <Route path="/dashboard" element={<ProtectedRoute><PropertyList /></ProtectedRoute>} />
+                    {/* Añadir más rutas protegidas aquí */}
+                    <Route path="*" element={<h2 className="text-2xl text-red-500">404 - Página no encontrada</h2>} />
+                </Routes>
             </main>
         </div>
     );
