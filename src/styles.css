@@ -219,7 +219,8 @@ select:focus {
 }
 
 .dashboard,
-.work-surface {
+.work-surface,
+.module-page {
   display: grid;
   gap: 26px;
 }
@@ -366,6 +367,92 @@ select:focus {
   font-size: 0.9rem;
 }
 
+.split-layout {
+  display: grid;
+  grid-template-columns: minmax(320px, 0.95fr) minmax(360px, 1.25fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.form-panel h2,
+.table-panel h2 {
+  margin: 0 0 14px;
+  color: oklch(27% 0.045 245);
+}
+
+.table-panel {
+  padding: clamp(22px, 4vw, 30px);
+  border: 1px solid oklch(87% 0.025 230);
+  border-radius: 8px;
+  background: oklch(99% 0.006 230);
+  box-shadow: 0 18px 50px oklch(40% 0.04 245 / 0.08);
+}
+
+.record-list {
+  display: grid;
+  gap: 12px;
+}
+
+.record-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 16px;
+  border: 1px solid oklch(88% 0.02 230);
+  border-radius: 8px;
+  background: oklch(97% 0.008 230);
+}
+
+.record-card h3,
+.record-card p {
+  margin: 0;
+}
+
+.record-card p {
+  color: oklch(48% 0.035 245);
+}
+
+.amount-block {
+  min-width: 132px;
+  text-align: right;
+}
+
+.amount-block strong,
+.amount-block small {
+  display: block;
+}
+
+.amount-block strong {
+  color: oklch(34% 0.1 250);
+}
+
+.amount-block small {
+  color: oklch(48% 0.035 245);
+}
+
+.compact-form {
+  max-width: 460px;
+}
+
+.monthly-summary {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.month-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 8px;
+  color: oklch(30% 0.08 165);
+  background: oklch(94% 0.045 165);
+  font-weight: 800;
+}
+
 @media (max-width: 780px) {
   .topbar,
   .page-heading,
@@ -375,6 +462,7 @@ select:focus {
   }
 
   .login-layout,
+  .split-layout,
   .metric-row,
   .form-grid {
     grid-template-columns: 1fr;

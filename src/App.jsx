@@ -1,147 +1,107 @@
 import React, { useMemo, useState } from 'react';
 import { Link, Navigate, Route, Routes } from 'react-router-dom';
-import ExpenseForm from './components/ExpenseForm.jsx';
-import LoginForm from './components/LoginForm.jsx';
-import PropertyForm from './components/PropertyForm.jsx';
-import PropertyList from './components/PropertyList.jsx';
-import { useAuth } from './context/AuthContext.jsx';
+import MonthlyExpensesModule from './components/MonthlyExpensesModule.jsx';
+import TenantsModule from './components/TenantsModule.jsx';
 
-const initialProperties = [
+const initialTenants = [
   {
-    id: '1',
-    propertyId: 'prop_dummy_123',
-    address: 'Avenida Central 123',
-    rent: 800,
-    status: 'Disponible',
-    tenant: 'Carlos Renteria',
+    id: 'inq-001',
+    fullName: 'Carlos Renteria',
+    documentType: 'DNI',
+    documentNumber: '45678912',
+    phone: '987 654 321',
+    email: 'carlos.renteria@email.com',
+    property: 'Avenida Central 123',
+    monthlyRent: 800,
+    guarantee: 800,
+    startDate: '2026-05-01',
+    status: 'Activo',
   },
   {
-    id: '2',
-    propertyId: 'prop_los_sauces_45',
-    address: 'Calle Los Sauces 45',
-    rent: 1200,
-    status: 'Ocupado',
-    tenant: 'Ana Torres',
-  },
-  {
-    id: '3',
-    propertyId: 'prop_parque_sur_18',
-    address: 'Jiron Parque Sur 18',
-    rent: 950,
-    status: 'Mantenimiento',
-    tenant: 'Pendiente',
-  },
-];
-
-const initialLeases = [
-  {
-    id: 'lease_prop_los_sauces_45',
-    propertyId: 'prop_los_sauces_45',
-    propertyAddress: 'Calle Los Sauces 45',
-    tenant: 'Ana Torres',
-    landlord: 'Mario Castro',
-    rent: 1200,
-    deposit: 1200,
+    id: 'inq-002',
+    fullName: 'Ana Torres',
+    documentType: 'CE',
+    documentNumber: 'CE-204578',
+    phone: '955 120 400',
+    email: 'ana.torres@email.com',
+    property: 'Calle Los Sauces 45',
+    monthlyRent: 1200,
+    guarantee: 1200,
+    startDate: '2026-04-15',
     status: 'Activo',
   },
 ];
 
-function ProtectedRoute({ children }) {
-  const { user } = useAuth();
-  return user ? children : <Navigate to="/login" replace />;
-}
+const initialPersonalExpenses = [
+  { id: 'gto-001', amount: 250, concept: 'Mercado familiar', date: '2026-05-03' },
+  { id: 'gto-002', amount: 120, concept: 'Internet y telefonia', date: '2026-05-08' },
+  { id: 'gto-003', amount: 90, concept: 'Transporte', date: '2026-04-22' },
+];
 
-function AppShell({ children, leases }) {
-  const { user, logout } = useAuth();
-
+function AppShell({ children, tenantCount, monthlyTotal }) {
   return (
     <div className="app-shell">
       <header className="topbar">
-        <Link to={user ? '/dashboard' : '/login'} className="brand">
+        <Link to="/alquiler" className="brand">
           <span className="brand-mark">A</span>
           <span>
             <strong>AlquilerApp</strong>
-            <small>Gestion inmobiliaria</small>
+            <small>Alquileres y gastos personales</small>
           </span>
         </Link>
 
-        {user && (
-          <nav className="nav-actions" aria-label="Navegacion principal">
-            <Link to="/dashboard">Propiedades</Link>
-            <Link to="/expense">Registrar gasto</Link>
-            <span className="user-chip">{user.name} - {user.role}</span>
-            <button type="button" className="ghost-button" onClick={logout}>Salir</button>
-          </nav>
-        )}
+        <nav className="nav-actions" aria-label="Modulos principales">
+          <Link to="/alquiler">Alquiler</Link>
+          <Link to="/gastos-mensuales">Gastos mensuales</Link>
+        </nav>
       </header>
 
       <main>{children}</main>
 
-      {user && (
-        <footer className="status-strip">
-          <span>{leases.length} contrato(s) activo(s)</span>
-          <span>Flujo demo segun TEST_PLAN.md</span>
-        </footer>
-      )}
+      <footer className="status-strip">
+        <span>{tenantCount} inquilino(s) registrados</span>
+        <span>Total personal del mes: US$ {monthlyTotal.toLocaleString('es-PE')}</span>
+      </footer>
     </div>
   );
 }
 
 function App() {
-  const [properties, setProperties] = useState(initialProperties);
-  const [leases, setLeases] = useState(initialLeases);
-  const [expenses, setExpenses] = useState([]);
+  const [tenants, setTenants] = useState(initialTenants);
+  const [personalExpenses, setPersonalExpenses] = useState(initialPersonalExpenses);
 
-  const activeLeases = useMemo(() => leases.filter((lease) => lease.status === 'Activo'), [leases]);
+  const currentMonthTotal = useMemo(() => {
+    return personalExpenses
+      .filter((expense) => expense.date.startsWith('2026-05'))
+      .reduce((sum, expense) => sum + expense.amount, 0);
+  }, [personalExpenses]);
 
-  const handleLeaseCreated = (lease) => {
-    setLeases((current) => {
-      const withoutDuplicate = current.filter((item) => item.id !== lease.id);
-      return [lease, ...withoutDuplicate];
-    });
-    setProperties((current) =>
-      current.map((property) =>
-        property.propertyId === lease.propertyId
-          ? { ...property, status: 'Ocupado', tenant: lease.tenant }
-          : property
-      )
-    );
+  const handleTenantCreated = (tenant) => {
+    setTenants((current) => [tenant, ...current]);
   };
 
   const handleExpenseCreated = (expense) => {
-    setExpenses((current) => [expense, ...current]);
+    setPersonalExpenses((current) => [expense, ...current]);
   };
 
   return (
-    <AppShell leases={activeLeases}>
+    <AppShell tenantCount={tenants.length} monthlyTotal={currentMonthTotal}>
       <Routes>
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/login" element={<LoginForm />} />
+        <Route path="/" element={<Navigate to="/alquiler" replace />} />
         <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <PropertyList properties={properties} leases={activeLeases} expenses={expenses} />
-            </ProtectedRoute>
-          }
+          path="/alquiler"
+          element={<TenantsModule tenants={tenants} onTenantCreated={handleTenantCreated} />}
         />
         <Route
-          path="/property/:id"
+          path="/gastos-mensuales"
           element={
-            <ProtectedRoute>
-              <PropertyForm properties={properties} onLeaseCreated={handleLeaseCreated} />
-            </ProtectedRoute>
+            <MonthlyExpensesModule
+              expenses={personalExpenses}
+              onExpenseCreated={handleExpenseCreated}
+            />
           }
         />
-        <Route
-          path="/expense"
-          element={
-            <ProtectedRoute>
-              <ExpenseForm leases={activeLeases} onExpenseCreated={handleExpenseCreated} />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        <Route path="*" element={<Navigate to="/alquiler" replace />} />
       </Routes>
     </AppShell>
   );

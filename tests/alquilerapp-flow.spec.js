@@ -1,44 +1,35 @@
 import { expect, test } from '@playwright/test';
 
-test('ejecuta el flujo del manual: login, contrato y gasto', async ({ page }) => {
-  await page.goto('/login');
+test('mantiene modulos independientes de alquiler y gastos mensuales', async ({ page }) => {
+  await page.goto('/alquiler');
 
-  await expect(page.getByRole('heading', { name: /inicia sesion/i })).toBeVisible();
-  await page.getByLabel('Email').fill('user_mcastro@alquilerapp.test');
-  await page.getByLabel('Contrasena').fill('demo123');
-  await page.getByRole('button', { name: /ingresar/i }).click();
+  await expect(page.getByRole('heading', { name: /registro de inquilinos/i })).toBeVisible();
+  await expect(page.getByRole('link', { name: /^alquiler$/i })).toBeVisible();
+  await expect(page.getByRole('link', { name: /gastos mensuales/i })).toBeVisible();
 
-  await expect(page.getByRole('heading', { name: /panel de propiedades/i })).toBeVisible();
-  await expect(page.getByText('user_mcastro - GESTOR')).toBeVisible();
+  await page.getByLabel('Nombre completo').fill('Luis Mendoza');
+  await page.getByLabel('Tipo de documento').selectOption('DNI');
+  await page.getByLabel('Numero de documento').fill('87654321');
+  await page.getByLabel('Telefono').fill('999 111 222');
+  await page.getByLabel('Correo').fill('luis.mendoza@email.com');
+  await page.getByLabel('Inmueble alquilado').fill('Av. Brasil 456');
+  await page.getByLabel('Monto de alquiler').fill('1500');
+  await page.getByLabel('Monto de garantia').fill('1500');
+  await page.getByRole('button', { name: /guardar inquilino/i }).click();
 
-  const primaryButton = page.getByRole('link', { name: /gestionar contrato/i }).first();
-  await expect(primaryButton).toBeVisible();
-  await primaryButton.click();
+  await expect(page.getByText('Luis Mendoza')).toBeVisible();
+  await expect(page.getByText('Av. Brasil 456')).toBeVisible();
 
-  await expect(page).toHaveURL(/\/property\/1$/);
-  await expect(page.getByRole('heading', { name: /generar contrato/i })).toBeVisible();
-  await page.getByLabel('Arrendatario').fill('Carlos Renteria');
-  await page.getByLabel('Arrendador').fill('Mario Castro');
-  await page.getByLabel('Renta mensual').fill('800');
-  await page.getByLabel('Deposito inicial').fill('800');
-  await page.getByRole('button', { name: /generar contrato y actualizar estado/i }).click();
+  await page.getByRole('link', { name: /gastos mensuales/i }).click();
+  await expect(page.getByRole('heading', { name: /gastos personales/i })).toBeVisible();
+  await expect(page.locator('.monthly-summary').getByText('US$ 370')).toBeVisible();
 
-  await expect(page.getByText(/contrato creado/i)).toBeVisible();
-  await page.getByRole('status').getByRole('link', { name: /registrar gasto/i }).click();
+  await page.getByLabel('Monto').fill('300');
+  await page.getByLabel('Concepto').fill('Colegio');
+  await page.getByLabel('Fecha').fill('2026-05-20');
+  await page.getByRole('button', { name: /guardar gasto mensual/i }).click();
 
-  await expect(page.getByRole('heading', { name: /registrar gasto/i })).toBeVisible();
-  await page.getByLabel('Contrato de alquiler').selectOption('lease_prop_dummy_123');
-  await page.getByLabel('Categoria').selectOption('Servicios');
-  await page.getByLabel('Monto').fill('120');
-  await page.getByLabel('Detalle').fill('Servicio de luz');
-  await page.getByRole('button', { name: /guardar gasto/i }).click();
-
-  await expect(page.getByText(/gasto registrado/i)).toBeVisible();
-  await page.getByRole('link', { name: /propiedades/i }).click();
-  await expect(page.getByRole('heading', { name: /panel de propiedades/i })).toBeVisible();
-
-  const cardBackground = await page.locator('.property-card').first().evaluate((element) => {
-    return window.getComputedStyle(element).backgroundColor;
-  });
-  expect(cardBackground).not.toBe('rgba(0, 0, 0, 0)');
+  await expect(page.getByText('Colegio')).toBeVisible();
+  await expect(page.locator('.monthly-summary').getByText('US$ 670')).toBeVisible();
+  await expect(page.getByText('Luis Mendoza')).toHaveCount(0);
 });
