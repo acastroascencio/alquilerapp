@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 // Importación simulada de Firebase o Auth Provider
-// import { auth } from '../firebaseConfig'; 
 
 const AuthContext = createContext(null);
 
@@ -14,9 +13,7 @@ export const AuthProvider = ({ children }) => {
 
     // *** SIMULACIÓN DE AUTENTICACIÓN ***
     useEffect(() => {
-        // En un entorno real, aquí se usaría onAuthStateChanged de Firebase
         const unsubscribe = () => {
-            // Simulación: Tras un breve retraso, el usuario ha iniciado sesión.
             setTimeout(() => {
                 setUser({ email: "user@ejemplo.com", name: "Usuario Demo", role: "GESTOR" });
                 setLoading(false);
@@ -26,13 +23,11 @@ export const AuthProvider = ({ children }) => {
     }, [navigate]);
 
     const login = (email, password) => {
-        // Lógica real de login a Firebase
         console.log("Intentando login para:", email);
         setUser({ email: email, name: "Usuario Demo", role: "GESTOR" });
     };
 
     const logout = () => {
-        // Lógica real de logout de Firebase
         setUser(null);
     };
 
