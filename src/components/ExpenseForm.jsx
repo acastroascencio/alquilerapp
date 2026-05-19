@@ -1,177 +1,85 @@
-# COMPONENTE REACT: Formulario de Gasto Mensual (ExpenseForm)
-
-Este componente debe ser el punto de contacto principal para el usuario en el *frontend* y debe seguir la reactividad y el diseño *Mobile-First*.
-
-## 🧩 Estructura Técnica y Tecnologías
-*   **Framework:** React (con Hooks: `useState`, `useEffect`, `useContext`).
-*   **Estilizado:** Tailwind CSS.
-*   **Comunicación:** Uso de `firebase/functions` para llamar al *endpoint* `registrarGasto`.
-
-## 🧩 Estado del Componente (React State)
-*   `formData`: Objeto que almacena los valores temporales del gasto.
-*   `isLoading`: Booleano para mostrar *spinner* y deshabilitar botones durante la llamada al *backend*.
-*   `isSuccess`: Booleano para mostrar mensajes de éxito y hacer visible el mensaje de confirmación.
-*   `error`: Mensaje de error recibido de Firebase.
-
-## 📝 Lógica del Componente (Pseudo-código de React)
-
-\`\`\`jsx
-import React, { useState, useCallback } from 'react';
-import { getFunctions, httpsCallable } from 'firebase/functions';
-import { getFirestore } from 'firebase/firestore';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 function ExpenseForm() {
-    // 1. Inicialización de hooks y servicios
-    const [formData, setFormData] = useState({
-        usuarioId: /* Obtenido del contexto de Auth */, 
-        categoria: '', 
-        monto: '', 
-        descripcion: '', 
-        fechaGasto: new Date().toISOString().split('T')[0]
-    });
-    const [isLoading, setIsLoading] = useState(false);
-    const [message, setMessage] = useState({ type: '', text: '' });
-    
-    const functions = getFunctions();
+    const navigate = useNavigate();
+    const { user } = useAuth();
+    const [expense, setExpense] = useState({ description: '', amount: '', propertyId: '', leaseId: '' });
 
-    // 2. Manejador de Cambios de Input
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
-        setMessage({ type: '', text: '' }); // Limpiar mensajes al interactuar
+        setExpense(prev => ({ ...prev, [name]: value }));
     };
 
-    // 3. Función de Envío (Llamada al Backend)
-    const handleSubmit = useCallback(async (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        if (isLoading) return;
-
-        // 1. Validación Frontend (Client-Side)
-        if (!formData.categoria || !formData.monto || !formData.fechaGasto) {
-            setMessage({ type: 'error', text: 'Por favor, complete al menos Categoría, Monto y Fecha.' });
+        if (!user) {
+            alert("Por favor, inicie sesión para registrar gastos.");
             return;
         }
 
-        setIsLoading(true);
-        setMessage({ type: '', text: '' });
+        // --- SIMULACIÓN DE BACKEND/FIREBASE ---
+        console.log("Intentando registrar gasto para:", user.email);
+        
+        alert(`Gasto de $${expense.amount} registrado para el Contrato ${expense.leaseId}. (Lógica de backend simulada)`);
+        navigate('/');
+    };
 
-        try {
-            // 2. Llamada a la Cloud Function de Firebase
-            const registrarGasto = httpsCallable(functions, 'registrarGasto');
-            
-            // Preparamos los datos para el backend
-            const dataToSend = {
-                usuarioId: formData.usuarioId,
-                categoria: formData.categoria,
-                monto: parseFloat(formData.monto),
-                descripcion: formData.descripcion,
-                fechaGasto: new Date(formData.fechaGasto) // Debe ser un objeto Date válido
-            };
-
-            await registrarGasto(dataToSend);
-            
-            // Éxito
-            setMessage({ type: 'success', text: '✅ Gasto registrado exitosamente.' });
-            // Limpiar formulario o navegar:
-            setFormData({ usuarioId: formData.usuarioId, categoria: '', monto: '', descripcion: '', fechaGasto: new Date().toISOString().split('T')[0] });
-
-        } catch (error) {
-            // Manejo de errores del backend (Firestore/Firebase)
-            const errorMessage = error.code === 'invalid-argument' 
-                ? error.message : `Error de Backend: ${error.message || 'Intente nuevamente.'}`;
-            
-            setMessage({ type: 'error', text: errorMessage });
-        } finally {
-            setIsLoading(false);
-        }
-    }, [formData.usuarioId]); // Dependencia: el usuario cambia el comportamiento.
-
-    // 4. Renderizado del Componente
     return (
-        <div className="p-6 bg-white shadow-lg rounded-lg max-w-xl mx-auto">
-            <h2 className="text-xl font-bold mb-6 text-indigo-700 border-b pb-2">Registrar Gasto Mensual</h2>
-
-            {/* Mensajes de Feedback */}
-            {message.text && (
-                <div className={`p-3 mb-4 rounded-lg ${message.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                    {message.text}
-                </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-5">
-                
-                {/* Campo de Fecha (Obligatorio) */}
+        <div className="max-w-xl mx-auto p-8 bg-white shadow-2xl rounded-xl border border-indigo-100">
+            <h2 className="text-3xl font-extrabold mb-6 text-gray-800 border-b pb-2">Reportar Gasto Operativo</h2>
+            <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Fecha del Gasto *</label>
-                    <input 
-                        type="date" 
-                        name="fechaGasto" 
-                        value={formData.fechaGasto} 
+                    <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">Descripción del Gasto</label>
+                    <input
+                        type="text"
+                        name="description"
+                        id="description"
+                        value={expense.description}
                         onChange={handleChange}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                        className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-3 focus:ring-indigo-500 focus:border-indigo-500"
+                        placeholder="Ej: Reparación de tuberías"
                         required
                     />
                 </div>
 
-                {/* Campo de Categoría (Obligatorio) */}
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Categoría *</label>
-                    <select 
-                        name="categoria" 
-                        value={formData.categoria} 
+                    <label htmlFor="amount" className="block text-sm font-medium text-gray-700 mb-1">Monto ($)</label>
+                    <input
+                        type="number"
+                        name="amount"
+                        id="amount"
+                        value={expense.amount}
                         onChange={handleChange}
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 bg-white"
-                        required
-                    >
-                        <option value="" disabled>Seleccione la categoría</option>
-                        <option value="Servicios">Servicios (Ej: Luz, Agua)</option>
-                        <option value="Mantenimiento">Mantenimiento (Ej: Reparaciones)</option>
-                        <option value="Servicios Personales">Servicios Personales</option>
-                    </select>
-                </div>
-                
-                {/* Campo de Monto (Obligatorio) */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Monto Total ($) *</label>
-                    <input 
-                        type="number" 
-                        name="monto" 
-                        value={formData.monto} 
-                        onChange={handleChange}
-                        placeholder="Ej: 150.00"
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                        className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-3 focus:ring-indigo-500 focus:border-indigo-500"
+                        placeholder="Monto total del gasto"
                         required
                     />
                 </div>
-
-                {/* Campo de Descripción (Opcional) */}
+                
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Descripción (Opcional)</label>
-                    <textarea 
-                        name="descripcion" 
-                        value={formData.descripcion} 
+                    <label htmlFor="leaseId" className="block text-sm font-medium text-gray-700 mb-1">Contrato Asociado (Lease ID)</label>
+                    <input
+                        type="text"
+                        name="leaseId"
+                        id="leaseId"
+                        value={expense.leaseId}
                         onChange={handleChange}
-                        rows="3"
-                        placeholder="Detalle del gasto (ej: Pago de electricidad de Mayo)."
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 resize-none"
-                    ></textarea>
+                        className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-3 focus:ring-indigo-500 focus:border-indigo-500"
+                        placeholder="Ej: L-12345"
+                        required
+                    />
                 </div>
-
-                {/* Botón de Acción */}
-                <button 
-                    type="submit" 
-                    disabled={isLoading}
-                    className={`w-full py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 ${isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 text-white'}`}
+                
+                <button
+                    type="submit"
+                    className="w-full py-3 px-4 border border-transparent rounded-lg shadow-lg text-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150"
                 >
-                    {isLoading ? (
-                        <div className="flex items-center gap-2">
-                            <div className="animate-spin w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full"></div>
-                            Guardando...
-                        </div>
-                    ) : 'Guardar Gasto Mensual'}
+                    Reportar Gasto
                 </button>
             </form>
-        </div>
+        </div >
     );
 }
 

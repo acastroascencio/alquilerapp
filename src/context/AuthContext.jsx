@@ -1,80 +1,51 @@
-# ARCHIVO: src/context/AuthContext.jsx
-import React, { createContext, useContext, useState, useEffect } from 'firebase/auth';
-import { getAuth, signInWithEmailAndPassword, signOut } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
-// Nota: Importar las funciones de backend simuladas o reales
-// import { obtenerPerfilUsuario } from '../services/firebaseFunctions'; 
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+// Importación simulada de Firebase o Auth Provider
+// import { auth } from '../firebaseConfig'; 
 
-export const AuthContext = React.createContext();
+const AuthContext = createContext(null);
+
+export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
-    const [currentUser, setCurrentUser] = useState(null);
-    const [userRole, setUserRole] = useState(null);
+    const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
 
-    // --- 1. Observador de Auth de Firebase ---
+    // *** SIMULACIÓN DE AUTENTICACIÓN ***
     useEffect(() => {
-        const auth = getAuth();
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-            if (user) {
-                // 2. Sincronizar Perfil con el Backend (Cloud Function)
-                console.log("Usuario detectado. Iniciando sincronización de perfil...");
-                // *** IMPLEMENTACIÓN REAL: Llamar a la Cloud Function ***
-                // obtenerPerfilUsuario(user.uid).then(data => {
-                //     setUser({ uid: user.uid, email: user.email, rol: data.user.rol });
-                //     setUserRole(data.user.rol);
-                // });
-                
-                // SIMULACIÓN DE ÉXITO PARA EJECUCIÓN: Se asume un rol inicial.
-                // En producción, esto debe esperar al resultado de la Cloud Function.
-                setUser({
-                    uid: user.uid,
-                    email: user.email,
-                    rol: 'ADMIN' // <-- DEBE SER DINÁMICO
-                });
-                setUserRole('ADMIN'); // Simulación de rol obtenido
-            } else {
-                setCurrentUser(null);
-                setUserRole(null);
-            }
-        });
+        // En un entorno real, aquí se usaría onAuthStateChanged de Firebase
+        const unsubscribe = () => {
+            // Simulación: Tras un breve retraso, el usuario ha iniciado sesión.
+            setTimeout(() => {
+                setUser({ email: "user@ejemplo.com", name: "Usuario Demo", role: "GESTOR" });
+                setLoading(false);
+            }, 1000);
+        };
+        unsubscribe();
+    }, [navigate]);
 
-        return () => unsubscribe();
-    }, []);
-
-    // --- Métodos de Auth ---
-    const login = async (email, password) => {
-        try {
-            await signInWithEmailAndPassword(auth, email, password);
-            // El onAuthStateChanged maneja el resto, lo que dispara la sincronización del perfil.
-            return true;
-        } catch (error) {
-            throw error;
-        }
+    const login = (email, password) => {
+        // Lógica real de login a Firebase
+        console.log("Intentando login para:", email);
+        setUser({ email: email, name: "Usuario Demo", role: "GESTOR" });
     };
 
     const logout = () => {
-        signOut(auth); // Desconecta al usuario
+        // Lógica real de logout de Firebase
+        setUser(null);
     };
 
-    // Valor que proveemos a toda la aplicación
-    const contextValue = {
-        user: currentUser,
-        role: userRole,
-        isAuthenticated: !!currentUser,
-        loading: loading,
-        login: login,
-        logout: logout
-    };
+    // Efecto para redirigir al usuario si no está logueado
+    useEffect(() => {
+        if (!user && !loading) {
+            navigate('/login');
+        }
+    }, [loading, user, navigate]);
 
     return (
-        <AuthContext.Provider value={contextValue}>
-            {loading ? <div className=\"text-center p-10 text-lg\">Cargando sesión...</div> : children}
+        <AuthContext.Provider value={{ user, loading, login, logout }}>
+            {children}
         </AuthContext.Provider>
     );
 };
-
-// Context Hook para consumo
-export const useAuth = () => useContext(AuthContext);
-
-export default AuthProvider;
