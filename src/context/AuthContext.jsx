@@ -1,46 +1,31 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-// Importación simulada de Firebase o Auth Provider
+import React, { createContext, useContext, useMemo, useState } from 'react';
 
 const AuthContext = createContext(null);
 
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-    // *** SIMULACIÓN DE AUTENTICACIÓN ***
-    useEffect(() => {
-        const unsubscribe = () => {
-            setTimeout(() => {
-                setUser({ email: "user@ejemplo.com", name: "Usuario Demo", role: "GESTOR" });
-                setLoading(false);
-            }, 1000);
-        };
-        unsubscribe();
-    }, [navigate]);
-
-    const login = (email, password) => {
-        console.log("Intentando login para:", email);
-        setUser({ email: email, name: "Usuario Demo", role: "GESTOR" });
+  const login = async (email) => {
+    setLoading(true);
+    const profile = {
+      id: 'user_mcastro',
+      email,
+      name: 'user_mcastro',
+      role: 'GESTOR',
     };
+    setUser(profile);
+    setLoading(false);
+    return profile;
+  };
 
-    const logout = () => {
-        setUser(null);
-    };
+  const logout = () => {
+    setUser(null);
+  };
 
-    // Efecto para redirigir al usuario si no está logueado
-    useEffect(() => {
-        if (!user && !loading) {
-            navigate('/login');
-        }
-    }, [loading, user, navigate]);
+  const value = useMemo(() => ({ user, loading, login, logout }), [user, loading]);
 
-    return (
-        <AuthContext.Provider value={{ user, loading, login, logout }}>
-            {children}
-        </AuthContext.Provider>
-    );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

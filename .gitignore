@@ -2,3 +2,5 @@ node_modules/
 dist/
 .vercel/
 npm-debug.log*
+test-results/
+playwright-report/

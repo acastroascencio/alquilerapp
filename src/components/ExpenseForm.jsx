@@ -1,86 +1,77 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 
-function ExpenseForm() {
-    const navigate = useNavigate();
-    const { user } = useAuth();
-    const [expense, setExpense] = useState({ description: '', amount: '', propertyId: '', leaseId: '' });
+function ExpenseForm({ leases, onExpenseCreated }) {
+  const [expense, setExpense] = useState({
+    leaseId: leases[0]?.id || '',
+    category: 'Servicios',
+    amount: '',
+    detail: '',
+  });
+  const [savedExpense, setSavedExpense] = useState(null);
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setExpense(prev => ({ ...prev, [name]: value }));
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+    setExpense((current) => ({ ...current, [name]: value }));
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    const selectedLease = leases.find((lease) => lease.id === expense.leaseId);
+    const nextExpense = {
+      id: `tx_${Date.now()}`,
+      ...expense,
+      amount: Number(expense.amount),
+      propertyAddress: selectedLease?.propertyAddress || 'Sin propiedad',
     };
+    setSavedExpense(nextExpense);
+    onExpenseCreated(nextExpense);
+  };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        if (!user) {
-            alert("Por favor, inicie sesión para registrar gastos.");
-            return;
-        }
+  return (
+    <section className="work-surface">
+      <div className="page-heading">
+        <div>
+          <p className="eyebrow">Transacciones</p>
+          <h1>Registrar Gasto</h1>
+          <p>Vincula cada gasto a un contrato activo para mantener la trazabilidad.</p>
+        </div>
+      </div>
 
-        // --- SIMULACIÓN DE BACKEND/FIREBASE ---
-        console.log("Intentando registrar gasto para:", user.email);
-        
-        alert(`Gasto de $${expense.amount} registrado para el Contrato ${expense.leaseId}. (Lógica de backend simulada)`);
-        navigate('/');
-    };
+      {savedExpense && (
+        <div className="success-banner" role="status">
+          <strong>Gasto registrado:</strong> US$ {savedExpense.amount.toLocaleString('es-PE')} para {savedExpense.propertyAddress}.
+        </div>
+      )}
 
-    return (
-        <div className="max-w-xl mx-auto p-8 bg-white shadow-2xl rounded-xl border border-indigo-100">
-            <h2 className="text-3xl font-extrabold mb-6 text-gray-800 border-b pb-2">Reportar Gasto Operativo</h2>
-            <form onSubmit={handleSubmit} className="space-y-6">
-                <div>
-                    <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">Descripción del Gasto</label>
-                    <input
-                        type="text"
-                        name="description"
-                        id="description"
-                        value={expense.description}
-                        onChange={handleChange}
-                        className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-3 focus:ring-indigo-500 focus:border-indigo-500"
-                        placeholder="Ej: Reparación de tuberías"
-                        required
-                    />
-                </div>
+      <form className="form-panel" onSubmit={handleSubmit}>
+        <div className="form-grid">
+          <label htmlFor="leaseId">Contrato de alquiler</label>
+          <select id="leaseId" name="leaseId" value={expense.leaseId} onChange={handleChange} required>
+            {leases.map((lease) => (
+              <option key={lease.id} value={lease.id}>
+                {lease.id} - {lease.propertyAddress}
+              </option>
+            ))}
+          </select>
 
-                <div>
-                    <label htmlFor="amount" className="block text-sm font-medium text-gray-700 mb-1">Monto ($)</label>
-                    <input
-                        type="number"
-                        name="amount"
-                        id="amount"
-                        value={expense.amount}
-                        onChange={handleChange}
-                        className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-3 focus:ring-indigo-500 focus:border-indigo-500"
-                        placeholder="Monto total del gasto"
-                        required
-                    />
-                </div>
-                
-                <div>
-                    <label htmlFor="leaseId" className="block text-sm font-medium text-gray-700 mb-1">Contrato Asociado (Lease ID)</label>
-                    <input
-                        type="text"
-                        name="leaseId"
-                        id="leaseId"
-                        value={expense.leaseId}
-                        onChange={handleChange}
-                        className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-3 focus:ring-indigo-500 focus:border-indigo-500"
-                        placeholder="Ej: L-12345"
-                        required
-                    />
-                </div>
-                
-                <button
-                    type="submit"
-                    className="w-full py-3 px-4 border border-transparent rounded-lg shadow-lg text-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150"
-                >
-                    Reportar Gasto
-                </button>
-            </form>
-        </div >
-    );
+          <label htmlFor="category">Categoria</label>
+          <select id="category" name="category" value={expense.category} onChange={handleChange}>
+            <option value="Servicios">Servicios</option>
+            <option value="Mantenimiento">Mantenimiento</option>
+            <option value="Renta">Renta</option>
+          </select>
+
+          <label htmlFor="amount">Monto</label>
+          <input id="amount" name="amount" type="number" value={expense.amount} onChange={handleChange} required />
+
+          <label htmlFor="detail">Detalle</label>
+          <input id="detail" name="detail" value={expense.detail} onChange={handleChange} required />
+        </div>
+
+        <button type="submit" className="primary-button">Guardar Gasto</button>
+      </form>
+    </section>
+  );
 }
 
 export default ExpenseForm;

@@ -1,67 +1,57 @@
 import React, { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext.jsx';
 
 const LoginForm = () => {
   const { login, loading } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const navigate = useNavigate();
+  const [email, setEmail] = useState('user_mcastro@alquilerapp.test');
+  const [password, setPassword] = useState('demo123');
 
   const handleLogin = async (event) => {
     event.preventDefault();
-    try {
-      await login(email, password);
-    } catch (error) {
-      console.error('Error de Login:', error);
-    }
+    await login(email, password);
+    navigate('/dashboard');
   };
 
   return (
-    <div className="p-8 bg-white shadow-2xl rounded-xl max-w-md mx-auto">
-      <h2 className="text-3xl font-bold mb-2 text-indigo-800">Inicia Sesion</h2>
-      <p className="mb-8 text-gray-500">Acceso al Sistema de Gestion de Alquileres.</p>
+    <section className="login-layout">
+      <div className="login-copy">
+        <p className="eyebrow">MVP Core</p>
+        <h1>Control de alquileres con flujo completo de contrato y gastos</h1>
+        <p>
+          Ingresa con el usuario de pruebas del plan. La sesion carga el rol GESTOR
+          y habilita el panel operativo.
+        </p>
+      </div>
 
-      <form onSubmit={handleLogin} className="space-y-5">
-        <div className="space-y-1">
-          <label className="block text-sm font-medium text-gray-700">Email</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            required
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
-            placeholder="tu@empresa.com"
-          />
-        </div>
-        <div className="space-y-1">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Contrasena</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            required
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
-            placeholder="********"
-          />
-        </div>
+      <form className="login-panel" onSubmit={handleLogin}>
+        <h2>Inicia Sesion</h2>
+        <p>Acceso al Sistema de Gestion de Alquileres.</p>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className={`w-full py-3 rounded-lg font-bold transition flex items-center justify-center gap-2 ${
-            loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 text-white'
-          }`}
-        >
-          {loading ? (
-            <div className="flex items-center gap-2">
-              <div className="animate-spin w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full"></div>
-              Ingresando...
-            </div>
-          ) : (
-            'Ingresar'
-          )}
+        <label htmlFor="email">Email</label>
+        <input
+          id="email"
+          type="email"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          required
+        />
+
+        <label htmlFor="password">Contrasena</label>
+        <input
+          id="password"
+          type="password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          required
+        />
+
+        <button type="submit" className="primary-button" disabled={loading}>
+          {loading ? 'Ingresando...' : 'Ingresar'}
         </button>
       </form>
-    </div>
+    </section>
   );
 };
 
